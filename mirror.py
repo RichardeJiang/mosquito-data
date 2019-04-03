@@ -62,7 +62,7 @@ def pasteAfterRotationWhitish(capImg, labImg, coordinates, posX, posY, bbox, dra
 		cv2.rectangle(res,pt1,pt2,(0,0,255),1)
 	return np.uint8(res), positionLabeling
 
-def pasteWithRescaling(capImg, labImg, coordinates, posX, posY, bbox, drawFlag):
+def pasteWithRescaling(capImg, labImg, coordinates, posX, posY, bbox, drawFlag, rescaleChoice):
 	res = np.array(labImg).astype(float)
 	pt1 = (int(posY + bbox[2] - 2), int(posX + bbox[0]) - 2)
 	pt2 = (int(posY + bbox[3] + 2), int(posX + bbox[1]) + 2)
@@ -91,15 +91,18 @@ def pasteWithRescaling(capImg, labImg, coordinates, posX, posY, bbox, drawFlag):
 
 	def rescalePixel(curr):
 		newPixel = np.array([0.0, 0.0, 0.0])
-		newPixel[0] = (curr[0] - minB) * 1.0 / (maxB - minB)
-		newPixel[1] = (curr[1] - minG) * 1.0 / (maxG - minG)
-		newPixel[2] = (curr[2] - minR) * 1.0 / (maxR - minR)
-		# newPixel[0] = 1.0 - abs(curr[0] - maxB) * 1.0 / 255
-		# newPixel[1] = 1.0 - abs(curr[1] - maxG) * 1.0 / 255
-		# newPixel[2] = 1.0 - abs(curr[2] - maxR) * 1.0 / 255
-		# newPixel[0] = (curr[0] - minB) * 1.0 / 255
-		# newPixel[1] = (curr[1] - minG) * 1.0 / 255
-		# newPixel[2] = (curr[2] - minR) * 1.0 / 255
+		if rescaleChoice == 0:
+			newPixel[0] = (curr[0] - minB) * 1.0 / (maxB - minB)
+			newPixel[1] = (curr[1] - minG) * 1.0 / (maxG - minG)
+			newPixel[2] = (curr[2] - minR) * 1.0 / (maxR - minR)
+		elif rescaleChoice == 1:
+			newPixel[0] = 1.0 - abs(curr[0] - maxB) * 1.0 / 255
+			newPixel[1] = 1.0 - abs(curr[1] - maxG) * 1.0 / 255
+			newPixel[2] = 1.0 - abs(curr[2] - maxR) * 1.0 / 255
+		else:
+			newPixel[0] = (curr[0] - minB) * 1.0 / 255
+			newPixel[1] = (curr[1] - minG) * 1.0 / 255
+			newPixel[2] = (curr[2] - minR) * 1.0 / 255
 		return newPixel
 
 	def checkXValidity(xValue):
@@ -158,7 +161,7 @@ def pasteWithRescaling(capImg, labImg, coordinates, posX, posY, bbox, drawFlag):
 	return np.uint8(res), positionLabeling, 0
 
 
-def old(capImg, labImg, coordinates, posX, posY, bbox, drawFlag):
+def old(capImg, labImg, coordinates, posX, posY, bbox, drawFlag, rescaleChoice):
 	res = np.array(labImg).astype(float)
 	pt1 = (int(posY + bbox[2] - 2), int(posX + bbox[0]) - 2)
 	pt2 = (int(posY + bbox[3] + 2), int(posX + bbox[1]) + 2)
@@ -187,9 +190,18 @@ def old(capImg, labImg, coordinates, posX, posY, bbox, drawFlag):
 
 	def rescalePixel(curr):
 		newPixel = np.array([0.0, 0.0, 0.0])
-		newPixel[0] = (curr[0] - minB) * 1.0 / (maxB - minB)
-		newPixel[1] = (curr[1] - minG) * 1.0 / (maxG - minG)
-		newPixel[2] = (curr[2] - minR) * 1.0 / (maxR - minR)
+		if rescaleChoice == 0:
+			newPixel[0] = (curr[0] - minB) * 1.0 / (maxB - minB)
+			newPixel[1] = (curr[1] - minG) * 1.0 / (maxG - minG)
+			newPixel[2] = (curr[2] - minR) * 1.0 / (maxR - minR)
+		elif rescaleChoice == 1:
+			newPixel[0] = 1.0 - abs(curr[0] - maxB) * 1.0 / 255
+			newPixel[1] = 1.0 - abs(curr[1] - maxG) * 1.0 / 255
+			newPixel[2] = 1.0 - abs(curr[2] - maxR) * 1.0 / 255
+		else:
+			newPixel[0] = (curr[0] - minB) * 1.0 / 255
+			newPixel[1] = (curr[1] - minG) * 1.0 / 255
+			newPixel[2] = (curr[2] - minR) * 1.0 / 255
 		return newPixel
 
 	positionLabeling = [int(bbox[0] / 2 + bbox[1] / 2 + posX), int(bbox[2] / 2 + bbox[3] / 2 + posY)]
@@ -255,7 +267,7 @@ if (__name__ == "__main__"):
 	# mat = [ele for ele in mat if ele[4][0][0] > 30 and ele[4][0][0] < 50] # only preserve the tracks lasts for more than 60 frames (2 seconds)
 	# length of qualified mat: 9
 	mat = [ele for ele in mat if ele[4][0][0] > 30]
-	mat = mat[:1]
+	mat = mat[2:4]
 
 	boundingboxes = [ele[7] for ele in mat]
 	frameNum = [ele[6][0] for ele in mat]
@@ -270,7 +282,7 @@ if (__name__ == "__main__"):
 		angles.append(angle)
 
 	# mosquito starts flying from here; center of the bgimg
-	startingPos = np.array([200, 1400])
+	startingPos = np.array([200, 300])
 	angles = [0] + angles
 
 	# stats:
@@ -284,14 +296,16 @@ if (__name__ == "__main__"):
 	# resWidth = int(cap1.get(cv2.CAP_PROP_FRAME_WIDTH))
 	# resHeight = int(cap1.get(cv2.CAP_PROP_FRAME_HEIGHT))
 	resHeight, resWidth, c = bgimg.shape
-	downScale = 5.0
+	downScale = 3.0
 
 	resultList = []
+	resultList1 = []
+	resultList2 = []
 
 	standardWidth = 1920
 	standardHeight = 1080
 
-	standardLength = 6500
+	standardLength = 5500
 
 	pastePosX = startingPos[0]
 	pastePosY = startingPos[1]
@@ -476,14 +490,32 @@ if (__name__ == "__main__"):
 			co, bbox = getObjFromMaskWhitish(dst)
 			if len(co) == 0:
 				resultList.append(bgimg)
+				resultList1.append(bgimg)
+				resultList2.append(bgimg)
 				labels.append(0)
 			else:
 
 				# resulting, positionLabeling = pasteAfterRotationWhitish(dstImg, bgimg, co, pastePosX, pastePosY, bbox, drawRectangleFlag)
-				resulting, positionLabeling, errorMsg = pasteWithRescaling(dstImg, bgimg, co, pastePosX, pastePosY, bbox, drawRectangleFlag)
-				# resulting, positionLabeling = old(dstImg, bgimg, co, pastePosX, pastePosY, bbox, drawRectangleFlag)
+				resulting, positionLabeling, errorMsg = pasteWithRescaling(dstImg, bgimg, co, pastePosX, pastePosY, bbox, drawRectangleFlag, 0)
+				resulting1, positionLabeling1, errorMsg1 = pasteWithRescaling(dstImg, bgimg, co, pastePosX, pastePosY, bbox, drawRectangleFlag, 1)
+				resulting2, positionLabeling2, errorMsg2 = pasteWithRescaling(dstImg, bgimg, co, pastePosX, pastePosY, bbox, drawRectangleFlag, 2)
+				
+				if len(resultList) < 5:
+					# print(resulting)
+					# print(positionLabeling)
+					# print(errorMsg)
+					# print()
+					cv2.imwrite('output/images/mask-' + str(len(resultList)) + '.png', dst)
+					cv2.imwrite('output/images/raw-' + str(len(resultList)) + '.png', dstImg)
+					cv2.imwrite('output/images/rescaleAll-' + str(len(resultList)) + '.png', resulting)
+					cv2.imwrite('output/images/rescaleBrighter-' + str(len(resultList)) + '.png', resulting1)
+					cv2.imwrite('output/images/rescaleDarker-' + str(len(resultList)) + '.png', resulting2)
+					cv2.imwrite('output/images/clear-' + str(len(resultList)) + '.png', bkimg)
+
 				if len(resulting) > 0:
 					resultList.append(resulting)
+					resultList1.append(resulting1)
+					resultList2.append(resulting2)
 					labels.append(1)
 				else:
 					print("shifting invoked!")
@@ -491,6 +523,8 @@ if (__name__ == "__main__"):
 					numOfNeg = random.randint(20,61)
 					for tt in range(numOfNeg):
 						resultList.append(bgimg)
+						resultList1.append(bgimg)
+						resultList2.append(bgimg)
 						labels.append(0)
 					# all cases: 
 					# 1: x ok, y < 0
@@ -545,10 +579,16 @@ if (__name__ == "__main__"):
 
 	# fourcc = cv2.FOURCC('m', 'p', '4', 'v')
 	fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-	video = cv2.VideoWriter('output/testanotheredge.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
+	video = cv2.VideoWriter('output/0402All.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
+	video1 = cv2.VideoWriter('output/0402Brighter.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
+	video2 = cv2.VideoWriter('output/0402Darker.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
 
 	for frame in resultList:
 		video.write(frame)
+	for frame in resultList1:
+		video1.write(frame)
+	for frame in resultList2:
+		video2.write(frame)
 
 
 	pass

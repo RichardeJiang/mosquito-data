@@ -91,12 +91,12 @@ def pasteWithRescaling(capImg, labImg, coordinates, posX, posY, bbox, drawFlag, 
 
 	def rescalePixel(curr):
 		newPixel = np.array([0.0, 0.0, 0.0])
-		newPixel[0] = (curr[0] - minB) * 1.0 / (maxB - minB)
-		newPixel[1] = (curr[1] - minG) * 1.0 / (maxG - minG)
-		newPixel[2] = (curr[2] - minR) * 1.0 / (maxR - minR)
-		# newPixel[0] = 1.0 - abs(curr[0] - maxB) * 1.0 / 255
-		# newPixel[1] = 1.0 - abs(curr[1] - maxG) * 1.0 / 255
-		# newPixel[2] = 1.0 - abs(curr[2] - maxR) * 1.0 / 255
+		# newPixel[0] = (curr[0] - minB) * 1.0 / (maxB - minB)
+		# newPixel[1] = (curr[1] - minG) * 1.0 / (maxG - minG)
+		# newPixel[2] = (curr[2] - minR) * 1.0 / (maxR - minR)
+		newPixel[0] = 1.0 - abs(curr[0] - maxB) * 1.0 / 255
+		newPixel[1] = 1.0 - abs(curr[1] - maxG) * 1.0 / 255
+		newPixel[2] = 1.0 - abs(curr[2] - maxR) * 1.0 / 255
 		# newPixel[0] = (curr[0] - minB) * 1.0 / 255
 		# newPixel[1] = (curr[1] - minG) * 1.0 / 255
 		# newPixel[2] = (curr[2] - minR) * 1.0 / 255
@@ -132,7 +132,7 @@ def pasteWithRescaling(capImg, labImg, coordinates, posX, posY, bbox, drawFlag, 
 	# 2: x ok, y > 1920
 	# 3: x < 0, y ok
 	# 4: x > 1080, y ok
-	# 5: else
+	# 5: else (4 corners and beyond)
 	if xError + yError > 0:
 		if xError == 0:
 			return [], positionLabeling, yError
