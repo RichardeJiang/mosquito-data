@@ -91,12 +91,12 @@ def pasteWithRescaling(capImg, labImg, coordinates, posX, posY, bbox, drawFlag, 
 
 	def rescalePixel(curr):
 		newPixel = np.array([0.0, 0.0, 0.0])
-		# newPixel[0] = (curr[0] - minB) * 1.0 / (maxB - minB)
-		# newPixel[1] = (curr[1] - minG) * 1.0 / (maxG - minG)
-		# newPixel[2] = (curr[2] - minR) * 1.0 / (maxR - minR)
-		newPixel[0] = 1.0 - abs(curr[0] - maxB) * 1.0 / 255
-		newPixel[1] = 1.0 - abs(curr[1] - maxG) * 1.0 / 255
-		newPixel[2] = 1.0 - abs(curr[2] - maxR) * 1.0 / 255
+		newPixel[0] = (curr[0] - minB) * 1.0 / (maxB - minB)
+		newPixel[1] = (curr[1] - minG) * 1.0 / (maxG - minG)
+		newPixel[2] = (curr[2] - minR) * 1.0 / (maxR - minR)
+		# newPixel[0] = 1.0 - abs(curr[0] - maxB) * 1.0 / 255
+		# newPixel[1] = 1.0 - abs(curr[1] - maxG) * 1.0 / 255
+		# newPixel[2] = 1.0 - abs(curr[2] - maxR) * 1.0 / 255
 		# newPixel[0] = (curr[0] - minB) * 1.0 / 255
 		# newPixel[1] = (curr[1] - minG) * 1.0 / 255
 		# newPixel[2] = (curr[2] - minR) * 1.0 / 255
@@ -214,7 +214,7 @@ if (__name__ == "__main__"):
 	# print(mixed)
 	bgVideoList = os.listdir('bg/tmp/drinking')
 	bgVideoList = ['bg/tmp/drinking/' + ele for ele in bgVideoList if '.mp4' in ele]
-	bgVideoList = bgVideoList[:2]
+	bgVideoList = bgVideoList[:10]
 	# bgVideoList = ['bg/tmp/drinking/a001-0855C.mp4']
 
 	# 6*30 = 180 frames
@@ -244,11 +244,13 @@ if (__name__ == "__main__"):
 		print("height: ", resHeight)
 		print("width: ", resWidth)
 		# print(resHeight)
+		startingPos = np.array([200, 1800])
 		downScale = 6.0
 		if resHeight == 1080 and resWidth == 1920:
 			downScale = 5.0
 		elif resHeight == 720:
 			downScale = 6.0
+			startingPos[1] = 1100
 		else:
 			# bgVideoIndex -= 1
 			capBG.release()
@@ -284,7 +286,7 @@ if (__name__ == "__main__"):
 			angles.append(angle)
 
 		# mosquito starts flying from here; center of the bgimg
-		startingPos = np.array([200, 1900])
+		
 		angles = [0] + angles
 
 		# stats:
@@ -597,7 +599,7 @@ if (__name__ == "__main__"):
 
 		# fourcc = cv2.FOURCC('m', 'p', '4', 'v')
 		fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-		video = cv2.VideoWriter('bg/tmp/generate/videos/' + resultTitle + '.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
+		video = cv2.VideoWriter('bg/tmp/generate/videos/aaa-' + resultTitle + '.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
 
 		for frame in resultList:
 			try:

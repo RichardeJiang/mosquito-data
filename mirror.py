@@ -259,6 +259,11 @@ def calculateAngleBetweenTracks(track1, track2):
 	# first, then last => we are trying to rotate the later one to match with the first one
 	return angle_between(firstVector, lastVector)
 
+def angleC(p2, p1):
+	ang1 = np.arctan2(*p1[::-1])
+	ang2 = np.arctan2(*p2[::-1])
+	return np.rad2deg((ang1 - ang2) % (2 * np.pi))
+
 if (__name__ == "__main__"):
 	bgimg = cv2.imread("images/biology.png")
 
@@ -277,9 +282,14 @@ if (__name__ == "__main__"):
 	# centroids = [ele[7][:2] for ele in mat]
 
 	angles = []
+	relativeAngles = []
 	for i in range(len(boundingboxes) - 1):
 		angle = calculateAngleBetweenTracks(boundingboxes[i], boundingboxes[i + 1])
 		angles.append(angle)
+		
+		lastVector = boundingboxes[i][-1][:2] - boundingboxes[i][-2][:2]
+		firstVector = boundingboxes[i + 1][1][:2] - boundingboxes[i + 1][0][:2]
+		
 
 	# mosquito starts flying from here; center of the bgimg
 	startingPos = np.array([200, 300])
