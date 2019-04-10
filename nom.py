@@ -195,6 +195,9 @@ def calculateAngleBetweenTracks(track1, track2):
 	return angle_between(firstVector, lastVector)
 
 if (__name__ == "__main__"):
+	"""
+	the name of the file, nom, means "No M", meaning we directly modify pasting position instead of using shifting matrix (warp affine)
+	"""
 	videoNames = ['MVI_7515', 'MVI_7516', 'MVI_7517', 'MVI_7520', 'MVI_7521', 'MVI_7525', 'MVI_7572', 'MVI_7573', 'MVI_7580', 'MVI_7581', 'MVI_7582']
 	videoNames = ['MVI_7521', 'MVI_7572', 'MVI_7573', 'MVI_7580', 'MVI_7581', 'MVI_7582']
 	maskNames = ['masks/' + ele + '_output_multi_BG.avi' for ele in videoNames]
@@ -213,7 +216,7 @@ if (__name__ == "__main__"):
 	mixed = list(zip(videoNames, maskNames, processedMats))
 	# print(mixed)
 	bgVideoList = os.listdir('bg/tmp/drinking')
-	bgVideoList = ['bg/tmp/drinking/' + ele for ele in bgVideoList if '.mp4' in ele]
+	bgVideoList = ['bg/tmp/drinking/' + ele for ele in bgVideoList if '.avi' in ele]
 	bgVideoList = bgVideoList[:10]
 	# bgVideoList = ['bg/tmp/drinking/a001-0855C.mp4']
 
@@ -260,11 +263,6 @@ if (__name__ == "__main__"):
 			capBG.release()
 			continue
 
-		# mat = scipy.io.loadmat('tracks/MVI_7521_output_multi.mat')['allSavedTracks'][0]
-
-		# mat = [ele for ele in mat if ele[4][0][0] > 30 and ele[4][0][0] < 50] # only preserve the tracks lasts for more than 60 frames (2 seconds)
-		# length of qualified mat: 9
-		# mat = mat[2:4] 
 
 		boundingboxes = [ele[7] for ele in mat]
 		frameNum = [ele[6][0] for ele in mat]
@@ -336,7 +334,6 @@ if (__name__ == "__main__"):
 		MShift = np.float32([[1, 0, 0], [0, 1, 0]])
 		firstCentroidOnCanvas = [0, 0]
 		lastCentroidOnCanvas = [0, 0]
-		tempRotationMatrix = np.array([[1,0],[0,1]])
 
 		theta = 0
 
@@ -344,7 +341,6 @@ if (__name__ == "__main__"):
 		labels = []
 
 		drawRectangleFlag = False
-		changeTrackShiftCompensation = [0, 0]
 
 		mirrorFlag = False
 

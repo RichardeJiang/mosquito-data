@@ -13,7 +13,7 @@ Note: here the bodyColorThreshold = 16 is predefined by the previous tryer
 Note 2: Nitin's old logic is wrong, where im2uint8 is used: it'll scale the whole image
 """
 
-def getObjFromMaskWhitish(mask, bodyColorThreshold = 4):
+def getObjFromMaskWhitish(mask, bodyColorThreshold = 8):
 	# print(np.max(mask))
 	blurred = []
 	body = []
@@ -154,6 +154,102 @@ def pasteWithRescaling(capImg, labImg, coordinates, posX, posY, bbox, drawFlag):
 		cv2.rectangle(res,pt1,pt2,(0,0,255),1)
 	return np.uint8(res), positionLabeling, 0
 
+def pasteFromCenter(capImg, labImg, coordinates, posX, posY, bbox, drawFlag, bgWidth, bgHeight):
+	res = np.array(labImg).astype(float)
+	pt1 = (int(posY + bbox[2] - 2), int(posX + bbox[0]) - 2)
+	pt2 = (int(posY + bbox[3] + 2), int(posX + bbox[1]) + 2)
+
+	minB = capImg[coordinates[0][0]][coordinates[0][1]][0]
+	maxB = capImg[coordinates[0][0]][coordinates[0][1]][0]
+	minG = capImg[coordinates[0][0]][coordinates[0][1]][1]
+	maxG = capImg[coordinates[0][0]][coordinates[0][1]][1]
+	minR = capImg[coordinates[0][0]][coordinates[0][1]][2]
+	maxR = capImg[coordinates[0][0]][coordinates[0][1]][2]
+	for ele in coordinates:
+		if capImg[ele[0]][ele[1]][0] < minB:
+			minB = capImg[ele[0]][ele[1]][0]
+		elif capImg[ele[0]][ele[1]][0] > maxB:
+			maxB = capImg[ele[0]][ele[1]][0]
+
+		if capImg[ele[0]][ele[1]][1] < minG:
+			minG = capImg[ele[0]][ele[1]][1]
+		elif capImg[ele[0]][ele[1]][1] > maxG:
+			maxG = capImg[ele[0]][ele[1]][1]
+
+		if capImg[ele[0]][ele[1]][2] < minR:
+			minR = capImg[ele[0]][ele[1]][2]
+		elif capImg[ele[0]][ele[1]][2] > maxR:
+			maxR = capImg[ele[0]][ele[1]][2]
+
+	def rescalePixel(curr):
+		newPixel = np.array([0.0, 0.0, 0.0])
+		newPixel[0] = (curr[0] - minB) * 1.0 / (maxB - minB)
+		newPixel[1] = (curr[1] - minG) * 1.0 / (maxG - minG)
+		newPixel[2] = (curr[2] - minR) * 1.0 / (maxR - minR)
+		# newPixel[0] = 1.0 - abs(curr[0] - maxB) * 1.0 / 255
+		# newPixel[1] = 1.0 - abs(curr[1] - maxG) * 1.0 / 255
+		# newPixel[2] = 1.0 - abs(curr[2] - maxR) * 1.0 / 255
+		# newPixel[0] = (curr[0] - minB) * 1.0 / 255
+		# newPixel[1] = (curr[1] - minG) * 1.0 / 255
+		# newPixel[2] = (curr[2] - minR) * 1.0 / 255
+		return newPixel
+
+	def checkXValidity(xValue):
+		# return 0 if valid, 1 if x < 0, 2 if x >= 1080
+		if xValue >= 0 and xValue < bgHeight:
+			return 0
+		elif xValue < 0:
+			return 1
+		else:
+			return 2
+
+	def checkYValidity(yValue):
+		# return 0 if valid, 1 if y < 0, 2 if y >= 1920
+		if yValue >= 0 and yValue < bgWidth:
+			return 0
+		elif yValue < 0:
+			return 1
+		else:
+			return 2
+
+	positionLabeling = [int(bbox[0] / 2 + bbox[1] / 2 + posX), int(bbox[2] / 2 + bbox[3] / 2 + posY)]
+	# check of the center of the mosquito has flying out of the current frame
+	xError = checkXValidity(positionLabeling[0])
+	yError = checkYValidity(positionLabeling[1])
+	print(positionLabeling)
+	# print("centroid: ", positionLabeling)
+	# print("real pasting position: ", [posX + coordinates[0][0], posY + coordinates[0][1]])
+	# all cases: 
+	# 1: x ok, y < 0
+	# 2: x ok, y > 1920
+	# 3: x < 0, y ok
+	# 4: x > 1080, y ok
+	# 5: else (4 corners and beyond)
+	if xError + yError > 0:
+		if xError == 0:
+			return [], positionLabeling, yError
+		elif yError == 0:
+			return [], positionLabeling, xError + 2
+		else:
+			return [], positionLabeling, 5
+	# res = res.astype(float)
+
+	for ele in coordinates:
+		# print(ele)
+		xIndex = int(posX + ele[0])
+		yIndex = int(posY + ele[1])
+		xError = checkXValidity(xIndex)
+		yError = checkYValidity(yIndex)
+		if xError + yError == 0:
+			# res[xIndex][yIndex] *= (capImg[ele[0]][ele[1]] / 255.0)
+			res[xIndex][yIndex] *= rescalePixel(capImg[ele[0]][ele[1]])
+		else:
+			continue
+			
+		
+	if drawFlag:
+		cv2.rectangle(res,pt1,pt2,(0,0,255),1)
+	return np.uint8(res), positionLabeling, 0
 
 def old(capImg, labImg, coordinates, posX, posY, bbox, drawFlag):
 	res = np.array(labImg).astype(float)
@@ -430,8 +526,8 @@ if (__name__ == "__main__"):
 
 			mask = clearUnrelatedMasks(mask, center, radius)
 
-			localPatchMask = getLocalPatch(mask, center, radius)
-			localPatchImg = getLocalPatch(img, center, radius)
+			localPatchMask = getLocalPatch(mask, center, 100)
+			localPatchImg = getLocalPatch(img, center, 100)
 
 
 			dst = cv2.resize(localPatchMask, None, fx = 1/downScale, fy = 1/downScale)
