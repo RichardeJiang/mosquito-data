@@ -120,6 +120,8 @@ def pasteWithRescaling(capImg, labImg, coordinates, posX, posY, bbox, drawFlag, 
 		else:
 			return 2
 
+	patchHeight = len(capImg)
+	patchWidth = len(capImg[0])
 	posX -= int(patchHeight / 2)
 	posY -= int(patchWidth / 2)
 	positionLabeling = [int(bbox[0] / 2 + bbox[1] / 2 + posX), int(bbox[2] / 2 + bbox[3] / 2 + posY)]
@@ -143,8 +145,7 @@ def pasteWithRescaling(capImg, labImg, coordinates, posX, posY, bbox, drawFlag, 
 		else:
 			return [], positionLabeling, 5
 	# res = res.astype(float)
-	patchHeight = len(capImg)
-	patchWidth = len(capImg[0])
+	
 	
 	for ele in coordinates:
 		# print(ele)
@@ -238,7 +239,7 @@ if (__name__ == "__main__"):
 	# print(mixed)
 	bgVideoList = os.listdir('bg/tmp/drinking')
 	bgVideoList = ['bg/tmp/drinking/' + ele for ele in bgVideoList if '.avi' in ele]
-	bgVideoList = bgVideoList[:10]
+	bgVideoList = bgVideoList[:2]
 	# bgVideoList = ['bg/tmp/drinking/a001-0855C.mp4']
 
 	# 6*30 = 180 frames
@@ -268,13 +269,13 @@ if (__name__ == "__main__"):
 		print("height: ", resHeight)
 		print("width: ", resWidth)
 		# print(resHeight)
-		startingPos = np.array([200, 1800])
+		startingPos = np.array([200, 800])
 		downScale = 6.0
 		if resHeight == 1080 and resWidth == 1920:
 			downScale = 5.0
 		elif resHeight == 720:
 			downScale = 6.0
-			startingPos[1] = 1100
+			# startingPos[1] = 1100
 		else:
 			# bgVideoIndex -= 1
 			capBG.release()
@@ -418,10 +419,11 @@ if (__name__ == "__main__"):
 				minorAdjustY = int((previousLastVector[1] + currentFirstVector[1]) / 2)
 				# pastePosX -= int(yShift / downScale)
 				# pastePosY -= int(xShift / downScale)
-				lastPos[1] += minorAdjustX / fixedDownScale
-				lastPos[0] += minorAdjustY / fixedDownScale
+				lastPos[1] += int(minorAdjustX / fixedDownScale)
+				lastPos[0] += int(minorAdjustY / fixedDownScale)
 
 				currTrackPastingPos.append(lastPos)
+				print("computed last position: ", lastPos)
 
 				# temp = currentTrackCentroids[1:]
 			for j in range(len(currentTrackCentroids) - 1):
@@ -437,48 +439,8 @@ if (__name__ == "__main__"):
 				currTrackPastingPos.append(prev)
 
 			lastPos = currTrackPastingPos[-1]
-
-			"""
-			get the shift distance between the two tracks
-			"""
-
-			if i > 0:
-
-
-				"""
-				Smoothing the connection between the two tracks by moving the shifting distance a bit based on the 2 vectors
-				"""
-				previousLastVector = [0, 0]
-				previousLastVector[0] = processedBoundingBoxes[i - 1][-1][0] - processedBoundingBoxes[i - 1][-2][0]
-				previousLastVector[1] = processedBoundingBoxes[i - 1][-1][1] - processedBoundingBoxes[i - 1][-2][1]
-				# previousStepLength = np.sqrt(previousLastVector[0]**2+previousLastVector[1]**2)
-				currentFirstVector = [0, 0]
-				currentFirstVector[0] = processedBoundingBoxes[i][2][0] - processedBoundingBoxes[i][1][0]
-				currentFirstVector[1] = processedBoundingBoxes[i][2][1] - processedBoundingBoxes[i][1][1]
-				# currentStepLength = np.sqrt(currentFirstVector[0]**2+currentFirstVector[1]**2)
-				# movementRatio = (currentStepLength + previousStepLength) / 2 / previousStepLength
-
-				minorAdjustX = int((previousLastVector[0] + currentFirstVector[0]) / 2)
-				minorAdjustY = int((previousLastVector[1] + currentFirstVector[1]) / 2)
-
-
-				previousEndingCentroid = processedBoundingBoxes[i - 1][-1][:2]
-				xShift = firstCentroid[0] - previousEndingCentroid[0] + minorAdjustX
-				yShift = firstCentroid[1] - previousEndingCentroid[1] + minorAdjustY
-
-				previousStartingCentroid = processedBoundingBoxes[i - 1][0][:2]
-				previousTrackShiftX = previousEndingCentroid[0] - previousStartingCentroid[0]
-				previousTrackShiftY = previousEndingCentroid[1] - previousStartingCentroid[1]
-				MShift[0][2] -= xShift
-				MShift[1][2] -= yShift
-
-				pastePosX -= int(yShift / downScale)
-				pastePosY -= int(xShift / downScale)
-
-			else:
-				# first track: mosquito starts flying from center of the image
-				pastePosX = startingPos[0] - int(firstCentroid[1] / downScale)
-				pastePosY = startingPos[1] - int(firstCentroid[0] / downScale)
+			print("original last position: ", lastPos)
+			print("whole pasting list: ", currTrackPastingPos)
 
 
 			for frameCounter, frameID in enumerate(currentTrackFrames):
@@ -502,8 +464,8 @@ if (__name__ == "__main__"):
 				localPatchMask = getLocalPatch(mask, center, 100)
 				localPatchImg = getLocalPatch(img, center, 100)
 
-				dst = cv2.resize(mask, None, fx = 1/currDownScale, fy = 1/currDownScale)
-				dstImg = cv2.resize(img, None, fx = 1/currDownScale, fy = 1/currDownScale)
+				dst = cv2.resize(localPatchMask, None, fx = 1/currDownScale, fy = 1/currDownScale)
+				dstImg = cv2.resize(localPatchImg, None, fx = 1/currDownScale, fy = 1/currDownScale)
 
 				_, bgimg = capBG.read()
 
@@ -591,7 +553,7 @@ if (__name__ == "__main__"):
 
 		# fourcc = cv2.FOURCC('m', 'p', '4', 'v')
 		fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-		video = cv2.VideoWriter('bg/tmp/generate/videos/aaa-' + resultTitle + '.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
+		video = cv2.VideoWriter('bg/tmp/generate/videos/logic2-' + resultTitle + '.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
 
 		for frame in resultList:
 			try:
