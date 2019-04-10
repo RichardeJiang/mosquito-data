@@ -382,7 +382,7 @@ if (__name__ == "__main__"):
 		angles.append(angle)
 
 	# mosquito starts flying from here; center of the bgimg
-	startingPos = np.array([800, 1800])
+	startingPos = np.array([800, 800])
 	angles = [0] + angles
 
 	# stats:
@@ -596,7 +596,7 @@ if (__name__ == "__main__"):
 			break
 
 	
-	np.savetxt('output/testanotheredge.csv', np.array(labels).astype(int), fmt='%i', delimiter=',')
+	np.savetxt('output/logic2.csv', np.array(labels).astype(int), fmt='%i', delimiter=',')
 
 	cap.release()
 	cap1.release()
@@ -604,7 +604,7 @@ if (__name__ == "__main__"):
 
 	# fourcc = cv2.FOURCC('m', 'p', '4', 'v')
 	fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-	video = cv2.VideoWriter('output/testanotheredge.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
+	video = cv2.VideoWriter('output/logic2.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
 
 	for frame in resultList:
 		video.write(frame)
