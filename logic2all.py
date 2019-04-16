@@ -239,7 +239,7 @@ if (__name__ == "__main__"):
 	# print(mixed)
 	bgVideoList = os.listdir('bg/tmp/drinking')
 	bgVideoList = ['bg/tmp/drinking/' + ele for ele in bgVideoList if '.avi' in ele]
-	bgVideoList = bgVideoList[:100]
+	bgVideoList = bgVideoList[2:150]
 	# bgVideoList = ['bg/tmp/drinking/a001-0855C.mp4']
 
 	# 6*30 = 180 frames
@@ -317,7 +317,7 @@ if (__name__ == "__main__"):
 
 		standardWidth = 1920
 		standardHeight = 1080
-		fixedDownScale = 6.0
+		fixedDownScale = 3.0
 
 		pastePosX = startingPos[0]
 		pastePosY = startingPos[1]
@@ -378,7 +378,9 @@ if (__name__ == "__main__"):
 
 				# else:
 				downScaleCounter += 1
-				downScaleList[k] = initialDownScale
+
+				# !!!! important: comment out the following line to fix the down scale, doing so to produce some test data
+				# downScaleList[k] = initialDownScale
 			print(currentTrackFrames)
 			currentTrackCentroids = [ele[:2] for ele in processedBoundingBoxes[i]]
 			assert len(currentTrackFrames) == len(currentTrackCentroids), "number of frames not matching with the number of centroids"
@@ -473,7 +475,7 @@ if (__name__ == "__main__"):
 					else:
 						print("shifting invoked!")
 						print("error message: ", errorMsg)
-						numOfNeg = random.randint(20,61)
+						numOfNeg = random.randint(20,60)
 						for tt in range(numOfNeg):
 							_, bgimg = capBG.read()
 							resultList.append(bgimg)
@@ -531,8 +533,8 @@ if (__name__ == "__main__"):
 				break
 
 
-		np.savetxt('bg/tmp/generate/labels/' + resultTitle + '.csv', np.array(labels).astype(int), fmt='%i', delimiter=',')
-		np.savetxt('bg/tmp/generate/labels/' + resultTitle + '-pos.csv', np.array(positionLabels).astype(int), fmt='%i', delimiter=',')
+		np.savetxt('bg/tmp/generate/0417/labels/' + resultTitle + '.csv', np.array(labels).astype(int), fmt='%i', delimiter=',')
+		np.savetxt('bg/tmp/generate/0417/labels/' + resultTitle + '-pos.csv', np.array(positionLabels).astype(int), fmt='%i', delimiter=',')
 
 		cap.release()
 		cap1.release()
@@ -541,7 +543,7 @@ if (__name__ == "__main__"):
 
 		# fourcc = cv2.FOURCC('m', 'p', '4', 'v')
 		fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-		video = cv2.VideoWriter('bg/tmp/generate/videos/logic2-' + resultTitle + '.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
+		video = cv2.VideoWriter('bg/tmp/generate/0417/videos/' + resultTitle + '.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
 
 		for frame in resultList:
 			try:

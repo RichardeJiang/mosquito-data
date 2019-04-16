@@ -571,6 +571,7 @@ if (__name__ == "__main__"):
 			cap.release()
 			cap1.release()
 			mosquitoIndex += 1
+			print("current track finished, changing to another mosquito!")
 
 			# end of mosquito index loop
 		
