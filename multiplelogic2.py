@@ -217,6 +217,20 @@ def calculateAngleBetweenTracks(track1, track2):
 	# first, then last => we are trying to rotate the later one to match with the first one
 	return angle_between(firstVector, lastVector)
 
+def write3DArrayTranspose(arrayToWrite, fileName):
+	tf = open(fileName, "w")
+	
+	for j in range(len(arrayToWrite[0])):
+		for i in range(len(arrayToWrite)):
+			tf.write("%s" % arrayToWrite[i][j])
+			if i < len(arrayToWrite) - 1:
+				tf.write(",")
+			else:
+				tf.write("\n")
+
+	tf.close()
+	return
+
 if (__name__ == "__main__"):
 	videoNames = ['MVI_7515', 'MVI_7516', 'MVI_7517', 'MVI_7520', 'MVI_7521', 'MVI_7525', 'MVI_7572', 'MVI_7573', 'MVI_7580', 'MVI_7581', 'MVI_7582']
 	videoNames = ['MVI_7521', 'MVI_7572', 'MVI_7573', 'MVI_7580', 'MVI_7581', 'MVI_7582']
@@ -236,7 +250,7 @@ if (__name__ == "__main__"):
 	# print(mixed)
 	bgVideoList = os.listdir('bg/tmp/drinking')
 	bgVideoList = ['bg/tmp/drinking/' + ele for ele in bgVideoList if '.avi' in ele]
-	bgVideoList = bgVideoList[:5]
+	bgVideoList = bgVideoList[:2]
 	# bgVideoList = ['bg/tmp/drinking/a001-0855C.mp4']
 
 	# 6*30 = 180 frames
@@ -291,6 +305,10 @@ if (__name__ == "__main__"):
 		currOutputNumOfMos = random.randint(1,10)
 		print("Current output mosquito number: ", currOutputNumOfMos)
 
+		########## currently leave this as it is; not implemented! ############
+		positionLabels = [[] for n in range(currOutputNumOfMos)]
+		labels = [[] for n in range(currOutputNumOfMos)]
+
 		# the track is okay, now retrieve all frames from the current bg video
 		resultList = []
 		bgFrameCount = int(capBG.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -338,6 +356,8 @@ if (__name__ == "__main__"):
 		
 			angles = [0] + angles
 
+			# the angles are read in, and we can start formulating the placeholders for the current mosquito
+
 			# note: read in the new track video and mask;
 			# cannot use the same logic as bg video, as bg video is reused for multiple tracks, 
 			# but for track we use a different track every time
@@ -345,7 +365,8 @@ if (__name__ == "__main__"):
 			cap1 = cv2.VideoCapture(maskName)
 			# fps = cap.get(cv2.CAP_PROP_FPS)
 			frameCount = int(min(cap.get(cv2.CAP_PROP_FRAME_COUNT), cap1.get(cv2.CAP_PROP_FRAME_COUNT)))		
-
+			currPositionList = positionLabels[mosquitoIndex]
+			currLabels = labels[mosquitoIndex]
 
 			standardWidth = 1920
 			standardHeight = 1080
@@ -356,10 +377,6 @@ if (__name__ == "__main__"):
 
 			# start from the first bg frame
 			bgFrameCounter = 0
-
-			########## currently leave this as it is; not implemented! ############
-			positionLabels = []
-			labels = []
 
 			drawRectangleFlag = False
 
@@ -491,8 +508,8 @@ if (__name__ == "__main__"):
 						# resultList.append(bgimg)
 						print("Weird: no mosquito can be found from the mask; skipping.")
 						bgFrameCounter += 1
-						labels.append(0)
-						positionLabels.append([-1, -1])
+						currLabels.append(0)
+						currPositionList.append([-1, -1])
 					else:
 						resulting, positionLabeling, errorMsg = pasteWithRescaling(dstImg, bgimg, co, currFramePastingPos[0], currFramePastingPos[1], bbox, drawRectangleFlag, resWidth, resHeight)
 				
@@ -500,8 +517,8 @@ if (__name__ == "__main__"):
 							# resultList.append(resulting)
 							resultList[bgFrameCounter] = resulting
 							bgFrameCounter += 1
-							labels.append(1)
-							positionLabels.append(positionLabeling)
+							currLabels.append(1)
+							currPositionList.append(positionLabeling)
 						else:
 							print("shifting invoked!")
 							print("error message: ", errorMsg)
@@ -512,8 +529,8 @@ if (__name__ == "__main__"):
 								bgFrameCounter += 1
 								if bgFrameCounter >= testLength - 1:
 									break
-								labels.append(0)
-								positionLabels.append([-1, -1])
+								currLabels.append(0)
+								currPositionList.append([-1, -1])
 							# all cases: 
 							# 1: x ok, y < 0
 							# 2: x ok, y > 1920
@@ -550,14 +567,6 @@ if (__name__ == "__main__"):
 										currTrackPastingPos[currFrameID][0] -= int(resHeight - reenteringAllowance)
 									pastePosX -= int(resHeight - reenteringAllowance)
 
-						# resultList.append(resulting)
-						# resulting = pasteAfterRotation(dstImg, bgimg, co, pastePosX, pastePosY)
-						# labels.append(1)
-						# resultList.append(resulting)
-
-
-					# print(len(resultList))
-
 
 					if bgFrameCounter >= testLength - 1:
 						break
@@ -576,10 +585,18 @@ if (__name__ == "__main__"):
 			# end of mosquito index loop
 		
 
+		labels = np.transpose(np.array(labels))
+		# positionLabels = np.transpose(np.array(positionLabels))
+
+		print("Sanity check: num of frames in bg video: ", resultList)
+		print("Sanity check: length of labels: ", len(labels))
+		print("Sanity check: length of position labels: ", len(positionLabels[0]))
+
+		# self-defining function to write position labels, as it is 3D array and np savetxt will complain
 		np.savetxt('bg/tmp/generate/0416/labels/' + resultTitle + '.csv', np.array(labels).astype(int), fmt='%i', delimiter=',')
-		np.savetxt('bg/tmp/generate/0416/labels/' + resultTitle + '-pos.csv', np.array(positionLabels).astype(int), fmt='%i', delimiter=',')
+		write3DArrayTranspose(positionLabels, 'bg/tmp/generate/0416/labels/' + resultTitle + '-pos.csv')
+		# np.savetxt('bg/tmp/generate/0416/labels/' + resultTitle + '-pos.csv', np.array(positionLabels).astype(int), fmt='%i', delimiter=',')
 	
-		# fourcc = cv2.FOURCC('m', 'p', '4', 'v')
 		fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
 		video = cv2.VideoWriter('bg/tmp/generate/0416/videos/logic2-' + resultTitle + '.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
 
