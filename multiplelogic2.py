@@ -250,7 +250,7 @@ if (__name__ == "__main__"):
 	# print(mixed)
 	bgVideoList = os.listdir('bg/tmp/drinking')
 	bgVideoList = ['bg/tmp/drinking/' + ele for ele in bgVideoList if '.avi' in ele]
-	bgVideoList = bgVideoList[:2]
+	bgVideoList = bgVideoList[2:3]
 	# bgVideoList = ['bg/tmp/drinking/a001-0855C.mp4']
 
 	# 6*30 = 180 frames
@@ -527,10 +527,11 @@ if (__name__ == "__main__"):
 								# bgimg = resultList[bgFrameCounter]
 								# resultList.append(bgimg)
 								bgFrameCounter += 1
-								if bgFrameCounter >= testLength - 1:
-									break
+								
 								currLabels.append(0)
 								currPositionList.append([-1, -1])
+								if bgFrameCounter > testLength - 1:
+									break
 							# all cases: 
 							# 1: x ok, y < 0
 							# 2: x ok, y > 1920
@@ -568,10 +569,10 @@ if (__name__ == "__main__"):
 									pastePosX -= int(resHeight - reenteringAllowance)
 
 
-					if bgFrameCounter >= testLength - 1:
+					if bgFrameCounter > testLength - 1:
 						break
 
-				if bgFrameCounter >= testLength - 1:
+				if bgFrameCounter > testLength - 1:
 					break
 
 				# end of tracks loop
@@ -588,7 +589,7 @@ if (__name__ == "__main__"):
 		labels = np.transpose(np.array(labels))
 		# positionLabels = np.transpose(np.array(positionLabels))
 
-		print("Sanity check: num of frames in bg video: ", resultList)
+		print("Sanity check: num of frames in bg video: ", len(resultList))
 		print("Sanity check: length of labels: ", len(labels))
 		print("Sanity check: length of position labels: ", len(positionLabels[0]))
 
