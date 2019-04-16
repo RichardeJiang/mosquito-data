@@ -239,7 +239,7 @@ if (__name__ == "__main__"):
 	# print(mixed)
 	bgVideoList = os.listdir('bg/tmp/drinking')
 	bgVideoList = ['bg/tmp/drinking/' + ele for ele in bgVideoList if '.avi' in ele]
-	bgVideoList = bgVideoList[:2]
+	bgVideoList = bgVideoList[:100]
 	# bgVideoList = ['bg/tmp/drinking/a001-0855C.mp4']
 
 	# 6*30 = 180 frames
@@ -269,7 +269,7 @@ if (__name__ == "__main__"):
 		print("height: ", resHeight)
 		print("width: ", resWidth)
 		# print(resHeight)
-		startingPos = np.array([200, 800])
+		startingPos = np.array([200, 1800])
 		downScale = 6.0
 		if resHeight == 1080 and resWidth == 1920:
 			downScale = 5.0
@@ -350,17 +350,6 @@ if (__name__ == "__main__"):
 			currentTrackCentroids = [ele for ele in boundingboxes[i]]
 			rotationDegree = angles[i]
 
-			"""
-			Test whether we need to mirror the image
-			"""
-			# if rotationDegree < 90 or rotationDegree > 270:
-			# 	mirrorFlag = False
-			# else:
-			# 	# mirrorFlag = True
-			# 	# newTrackCentroids = [[1919 - ele[0], ele[1]] for ele in currentTrackCentroids]
-			# 	for j in range(len(currentTrackCentroids)):
-			# 		currentTrackCentroids[j][0] = 1919 - currentTrackCentroids[j][0]
-
 			processedBoundingBoxes.append(currentTrackCentroids)
 
 
@@ -417,8 +406,7 @@ if (__name__ == "__main__"):
 
 				minorAdjustX = int((previousLastVector[0] + currentFirstVector[0]) / 2)
 				minorAdjustY = int((previousLastVector[1] + currentFirstVector[1]) / 2)
-				# pastePosX -= int(yShift / downScale)
-				# pastePosY -= int(xShift / downScale)
+				
 				lastPos[1] += int(minorAdjustX / fixedDownScale)
 				lastPos[0] += int(minorAdjustY / fixedDownScale)
 
