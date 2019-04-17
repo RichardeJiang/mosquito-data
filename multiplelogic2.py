@@ -65,8 +65,7 @@ def pasteAfterRotationWhitish(capImg, labImg, coordinates, posX, posY, bbox, dra
 
 def pasteWithRescaling(capImg, labImg, coordinates, posX, posY, bbox, drawFlag, bgWidth, bgHeight):
 	res = np.array(labImg).astype(float)
-	pt1 = (int(posY + bbox[2] - 2), int(posX + bbox[0]) - 2)
-	pt2 = (int(posY + bbox[3] + 2), int(posX + bbox[1]) + 2)
+	
 
 	minB = capImg[coordinates[0][0]][coordinates[0][1]][0]
 	maxB = capImg[coordinates[0][0]][coordinates[0][1]][0]
@@ -125,6 +124,8 @@ def pasteWithRescaling(capImg, labImg, coordinates, posX, posY, bbox, drawFlag, 
 	patchWidth = len(capImg[0])
 	posX -= int(patchHeight / 2)
 	posY -= int(patchWidth / 2)
+	pt1 = (int(posY + bbox[2] - 2), int(posX + bbox[0]) - 2)
+	pt2 = (int(posY + bbox[3] + 2), int(posX + bbox[1]) + 2)
 	positionLabeling = [int(bbox[0] / 2 + bbox[1] / 2 + posX), int(bbox[2] / 2 + bbox[3] / 2 + posY)]
 	# check of the center of the mosquito has flying out of the current frame
 	xError = checkXValidity(positionLabeling[0])
@@ -250,7 +251,7 @@ if (__name__ == "__main__"):
 	# print(mixed)
 	bgVideoList = os.listdir('bg/tmp/drinking')
 	bgVideoList = ['bg/tmp/drinking/' + ele for ele in bgVideoList if '.avi' in ele]
-	bgVideoList = bgVideoList[2:3]
+	bgVideoList = bgVideoList[5:10]
 	# bgVideoList = ['bg/tmp/drinking/a001-0855C.mp4']
 
 	# 6*30 = 180 frames
@@ -305,7 +306,6 @@ if (__name__ == "__main__"):
 		currOutputNumOfMos = random.randint(1,10)
 		print("Current output mosquito number: ", currOutputNumOfMos)
 
-		########## currently leave this as it is; not implemented! ############
 		positionLabels = [[] for n in range(currOutputNumOfMos)]
 		labels = [[] for n in range(currOutputNumOfMos)]
 
@@ -332,9 +332,7 @@ if (__name__ == "__main__"):
 			boundingboxes = [ele[7] for ele in mat]
 			frameNum = [ele[6][0] for ele in mat]
 			trackNum = len(boundingboxes)
-			# boundingboxes = [ele for s in boundingboxes for ele in s]
-			# centroids = [ele[:2] for ele in boundingboxes]
-			# centroids = [ele[7][:2] for ele in mat]
+			
 			templengthList = [len(ele) for ele in frameNum]
 			totalTrackFrames = sum(templengthList)
 
@@ -348,6 +346,9 @@ if (__name__ == "__main__"):
 			startingRow = random.randint(100, resHeight - 100)
 			startingCol = random.randint(100, resWidth - 100)
 			startingPos = np.array([startingRow, startingCol])
+
+			# adding the following line to test edge reentering
+			# startingPos = np.array([200, 1880]) if mosquitoIndex == 0 else np.array([20, 400])
 
 			angles = []
 			for i in range(len(boundingboxes) - 1):
@@ -544,29 +545,87 @@ if (__name__ == "__main__"):
 								for currFrameID in range(frameCounter, len(currTrackPastingPos)):
 									currTrackPastingPos[currFrameID][1] += int(reenteringAllowance - positionLabeling[0])
 									currTrackPastingPos[currFrameID][0] += int(resHeight / 2 - positionLabeling[1])
-								pastePosY += (reenteringAllowance - positionLabeling[0])
+								pastePosY += int(reenteringAllowance - positionLabeling[0])
 								pastePosX += int(resHeight / 2 - positionLabeling[1])
+								lastPos[0] += int(resHeight / 2 - positionLabeling[1])
+								lastPos[1] += int(reenteringAllowance - positionLabeling[0])
 							else:
-								# assume: for now jump to the opposite side
-								if errorMsg == 1:
+								
+								reenterChecker = random.randint(0, 3)
+								reenterCol = random.randint(200, resWidth - 200)
+								reenterRow = random.randint(200, resHeight - 200)
+
+								# print("col: ", reenterCol)
+								# print("row: ", reenterRow)
+								# print("position labeling: ", positionLabeling)
+
+								# reenterChecker = 1
+
+								# reenter from top edge
+								if reenterChecker == 0:
+									print("reentering from top edge")
 									for currFrameID in range(frameCounter, len(currTrackPastingPos)):
-										currTrackPastingPos[currFrameID][1] += int(resWidth - reenteringAllowance)
-									pastePosY += int(resWidth - reenteringAllowance)
-									# MShift[0][2] += (6000 - 10) # 1910
-								elif errorMsg == 2:
-									# MShift[0][2] -= (6000 - 10)
+										currTrackPastingPos[currFrameID][1] += int(reenterCol - positionLabeling[1])
+										currTrackPastingPos[currFrameID][0] += int(reenteringAllowance - positionLabeling[0])
+
+									lastPos[0] += int(reenteringAllowance - positionLabeling[0])
+									lastPos[1] += int(reenterCol - positionLabeling[1])
+
+								# reenter from bottom edge
+								elif reenterChecker == 1:
+									print("reentering from bottom edge")
 									for currFrameID in range(frameCounter, len(currTrackPastingPos)):
-										currTrackPastingPos[currFrameID][1] -= int(resWidth - reenteringAllowance)
-									pastePosY -= int(resWidth - reenteringAllowance)
-								elif errorMsg == 3:
-									# MShift[1][2] += (standardHeight - 10) # 1070
+										currTrackPastingPos[currFrameID][1] += int(reenterCol - positionLabeling[1])
+										currTrackPastingPos[currFrameID][0] += int(resHeight - reenteringAllowance - positionLabeling[0])
+										# print("recalculating pasting position: ", currTrackPastingPos[currFrameID])
+
+									lastPos[0] += int(resHeight - reenteringAllowance - positionLabeling[0])
+									lastPos[1] += int(reenterCol - positionLabeling[1])
+
+								# reenter from left edge
+								elif reenterChecker == 2:
+									print("reentering from left edge")
 									for currFrameID in range(frameCounter, len(currTrackPastingPos)):
-										currTrackPastingPos[currFrameID][0] += int(resHeight - reenteringAllowance)
-									pastePosX += int(resHeight - reenteringAllowance)
+										currTrackPastingPos[currFrameID][1] += int(reenteringAllowance - positionLabeling[1])
+										currTrackPastingPos[currFrameID][0] += int(reenterRow - positionLabeling[0])
+
+									lastPos[0] += int(reenterRow - positionLabeling[0])
+									lastPos[1] += int(reenteringAllowance - positionLabeling[1])
+
+								# reenter from right edge
 								else:
+									print("reentering from right edge")
 									for currFrameID in range(frameCounter, len(currTrackPastingPos)):
-										currTrackPastingPos[currFrameID][0] -= int(resHeight - reenteringAllowance)
-									pastePosX -= int(resHeight - reenteringAllowance)
+										currTrackPastingPos[currFrameID][1] += int(resWidth - reenteringAllowance - positionLabeling[1])
+										currTrackPastingPos[currFrameID][0] += int(reenterRow - positionLabeling[0])
+
+									lastPos[0] += int(reenterRow - positionLabeling[0])
+									lastPos[1] += int(resWidth - reenteringAllowance - positionLabeling[1])
+
+								
+								# below logic: assume jumping to the opposite side
+								# if errorMsg == 1:
+								# 	for currFrameID in range(frameCounter, len(currTrackPastingPos)):
+								# 		currTrackPastingPos[currFrameID][1] += int(resWidth - reenteringAllowance)
+								# 	pastePosY += int(resWidth - reenteringAllowance)
+								# 	lastPos[1] += int(resWidth - reenteringAllowance)
+								# 	# MShift[0][2] += (6000 - 10) # 1910
+								# elif errorMsg == 2:
+								# 	for currFrameID in range(frameCounter, len(currTrackPastingPos)):
+								# 		currTrackPastingPos[currFrameID][1] -= int(resWidth - reenteringAllowance)
+								# 	pastePosY -= int(resWidth - reenteringAllowance)
+								# 	lastPos[1] -= int(resWidth - reenteringAllowance)
+								# elif errorMsg == 3:
+								# 	# MShift[1][2] += (standardHeight - 10) # 1070
+								# 	for currFrameID in range(frameCounter, len(currTrackPastingPos)):
+								# 		currTrackPastingPos[currFrameID][0] += int(resHeight - reenteringAllowance)
+								# 	pastePosX += int(resHeight - reenteringAllowance)
+								# 	lastPos[0] += int(resHeight - reenteringAllowance)
+								# else:
+								# 	for currFrameID in range(frameCounter, len(currTrackPastingPos)):
+								# 		currTrackPastingPos[currFrameID][0] -= int(resHeight - reenteringAllowance)
+								# 	pastePosX -= int(resHeight - reenteringAllowance)
+								# 	lastPos[0] -= int(resHeight - reenteringAllowance)
 
 
 					if bgFrameCounter > testLength - 1:
