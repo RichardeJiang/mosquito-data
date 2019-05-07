@@ -251,7 +251,7 @@ if (__name__ == "__main__"):
 	# print(mixed)
 	bgVideoList = os.listdir('bg/tmp/drinking')
 	bgVideoList = ['bg/tmp/drinking/' + ele for ele in bgVideoList if '.avi' in ele]
-	bgVideoList = bgVideoList[5:10]
+	bgVideoList = bgVideoList[10:]
 	# bgVideoList = ['bg/tmp/drinking/a001-0855C.mp4']
 
 	# 6*30 = 180 frames
@@ -653,12 +653,12 @@ if (__name__ == "__main__"):
 		print("Sanity check: length of position labels: ", len(positionLabels[0]))
 
 		# self-defining function to write position labels, as it is 3D array and np savetxt will complain
-		np.savetxt('bg/tmp/generate/0416/labels/' + resultTitle + '.csv', np.array(labels).astype(int), fmt='%i', delimiter=',')
-		write3DArrayTranspose(positionLabels, 'bg/tmp/generate/0416/labels/' + resultTitle + '-pos.csv')
+		np.savetxt('bg/tmp/generate/0507/labels/' + resultTitle + '.csv', np.array(labels).astype(int), fmt='%i', delimiter=',')
+		write3DArrayTranspose(positionLabels, 'bg/tmp/generate/0507/labels/' + resultTitle + '-pos.csv')
 		# np.savetxt('bg/tmp/generate/0416/labels/' + resultTitle + '-pos.csv', np.array(positionLabels).astype(int), fmt='%i', delimiter=',')
 	
 		fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-		video = cv2.VideoWriter('bg/tmp/generate/0416/videos/logic2-' + resultTitle + '.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
+		video = cv2.VideoWriter('bg/tmp/generate/0507/videos/logic2-' + resultTitle + '.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
 
 		for frame in resultList:
 			try:
