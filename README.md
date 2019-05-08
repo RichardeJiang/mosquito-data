@@ -36,8 +36,8 @@ for bgVideo in bgVideoList:
     for i in numOfMosquitoes:
         randomly choose the starting position;
         randomly choose the mosquito video / tracks to be used;
-        calculate the pasting position of each frame;
         randomly choose the down-scale factor of each frame (not completely random, choose based on the previous value so there is no sudden change);
+        calculate the pasting position of each frame based on the actual movement and down-scale factor of the frame;
         smooth the transition between tracks;
         for each frame:
             retrieve the mosquitoes based on lab video, tracks, masks;
