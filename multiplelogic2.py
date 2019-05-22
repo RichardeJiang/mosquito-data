@@ -157,6 +157,9 @@ def pasteWithRescaling(capImg, labImg, coordinates, posX, posY, bbox, drawFlag, 
 		yError = checkYValidity(yIndex)
 		if xError + yError == 0:
 			# res[xIndex][yIndex] *= (capImg[ele[0]][ele[1]] / 255.0)
+			# print("capImg shape: ", capImg.shape)
+			# print("ele: ", ele)
+			# print("res shape: ", res.shape)
 			res[xIndex][yIndex] *= rescalePixel(capImg[ele[0]][ele[1]])
 		else:
 			continue
@@ -248,14 +251,20 @@ if (__name__ == "__main__"):
 		processedMats.append(mat)
 
 	mixed = list(zip(videoNames, maskNames, processedMats))
-	# print(mixed)
-	bgVideoList = os.listdir('bg/tmp/drinking')
-	bgVideoList = ['bg/tmp/drinking/' + ele for ele in bgVideoList if '.avi' in ele]
-	bgVideoList = bgVideoList[10:]
+
+	# bgVideoList = os.listdir('bg/tmp/drinking')
+	# bgVideoList = ['bg/tmp/drinking/' + ele for ele in bgVideoList if '.mp4' in ele]
+
+	bgVideoList = os.listdir('bg/stair/sleepingok')
+	bgVideoList = ['bg/stair/sleepingok/' + ele for ele in bgVideoList if '.mp4' in ele]
+	bgVideoList = bgVideoList[:2]
 	# bgVideoList = ['bg/tmp/drinking/a001-0855C.mp4']
 
 	# 6*30 = 180 frames
+	cap = None
+	cap1 = None
 	bgVideoIndex = 0
+	# print(bgVideoList)
 	while bgVideoIndex < len(bgVideoList):
 	# for bgVideo in bgVideoList:
 		if bgVideoIndex > 0 and cap != None:
@@ -288,6 +297,8 @@ if (__name__ == "__main__"):
 		elif resHeight == 720:
 			downScale = 6.0
 			# startingPos[1] = 1100
+		elif resHeight == 480:
+			downScale = 7.0
 		else:
 			# bgVideoIndex -= 1
 			capBG.release()
@@ -319,13 +330,38 @@ if (__name__ == "__main__"):
 
 		for i in range(testLength):
 			_, bgimg = capBG.read()
+			# the following if can be removed if the videos are ok
+			# added here as some of the videos contain blank frames
+			if bgimg is None or len(bgimg.shape) == 0:
+				print("Warning: empty frame detected in raw videos!")
+				testLength -= 1
+				continue
 			resultList.append(bgimg)
 
 		capBG.release()
 
+		##### possible that a video contains no mosquitoes #####
+		containsNoMos = random.randint(1, 10)
+
+		## modify the following float num for your own probability of not containing any mosquitoes
+		noMosProbability = 0.1
+		# containsNoMos = 1
+		if containsNoMos < int(10 * noMosProbability + 1):
+			tmpLabels = [0] * len(resultList)
+			tmpPosLabels = [[-1, -1]] * len(resultList)
+			labels = []
+			labels.append(tmpLabels)
+			positionLabels = []
+			positionLabels.append(tmpPosLabels)
+
+			nonZeroFlag = False
+
+		else:
+			nonZeroFlag = True
+
 		# iterating through different mosquitoes
 		mosquitoIndex = 0
-		while mosquitoIndex < currOutputNumOfMos:
+		while mosquitoIndex < currOutputNumOfMos and nonZeroFlag:
 
 			# retrieve the tracks information, and check whether it's sufficient
 			(videoName, maskName, mat) = random.choice(mixed)
@@ -653,12 +689,13 @@ if (__name__ == "__main__"):
 		print("Sanity check: length of position labels: ", len(positionLabels[0]))
 
 		# self-defining function to write position labels, as it is 3D array and np savetxt will complain
-		np.savetxt('bg/tmp/generate/0507/labels/' + resultTitle + '.csv', np.array(labels).astype(int), fmt='%i', delimiter=',')
-		write3DArrayTranspose(positionLabels, 'bg/tmp/generate/0507/labels/' + resultTitle + '-pos.csv')
+		# np.savetxt('bg/tmp/generate/0507/labels/' + resultTitle + '.csv', np.array(labels).astype(int), fmt='%i', delimiter=',')
+		np.savetxt('bg/stair/sleepingout/labels/' + resultTitle + '.csv', np.array(labels).astype(int), fmt='%i', delimiter=',')
+		write3DArrayTranspose(positionLabels, 'bg/stair/sleepingout/labels/' + resultTitle + '-pos.csv')
 		# np.savetxt('bg/tmp/generate/0416/labels/' + resultTitle + '-pos.csv', np.array(positionLabels).astype(int), fmt='%i', delimiter=',')
 	
 		fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-		video = cv2.VideoWriter('bg/tmp/generate/0507/videos/logic2-' + resultTitle + '.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
+		video = cv2.VideoWriter('bg/stair/sleepingout/videos/' + resultTitle + '.mov', fourcc, fps = 30, frameSize = (resWidth, resHeight), isColor = 1)
 
 		for frame in resultList:
 			try:
